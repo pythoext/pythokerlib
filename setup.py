@@ -3,11 +3,11 @@ from promebuilder import gen_metadata, setup
 from setuptools import find_packages
 
 METADATA = gen_metadata(
-    name="promlib",
-    description="PromLib package",
-    email="alberto.cordioli@prometeia.com",
-    keywords="lab",
-    url="https://github.com/prometeia/promlib"
+    name="pythokerlib",
+    description="PythoKerLib package",
+    email="pytho_support@prometeia.com",
+    keywords="multikernel pytho jupyter",
+    url="https://github.com/prometeia/pythokerlib"
 )
 
 if __name__ == '__main__':

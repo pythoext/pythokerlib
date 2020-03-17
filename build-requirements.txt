@@ -1,1 +1,1 @@
-promebuilder>=0.7
+promebuilder>=0.8
