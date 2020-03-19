@@ -1,2 +1,8 @@
 python
 six
+numpy
+pandas
+scipy
+statsmodels
+python-dateutil
+unidecode
