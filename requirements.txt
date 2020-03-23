@@ -1,6 +1,8 @@
 python
+ipykernel
+feather-format
 six
-numpy
+numpy=1.*
 pandas
 scipy
 statsmodels
