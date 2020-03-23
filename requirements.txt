@@ -2,7 +2,7 @@ python
 ipykernel
 feather-format
 six
-numpy=1.*
+numpy==1.*
 pandas
 scipy
 statsmodels

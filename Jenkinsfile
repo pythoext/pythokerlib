@@ -5,18 +5,13 @@ pipeline {
   parameters {
     booleanParam(
       name: 'skip_tests',
-      defaultValue: false,
+      defaultValue: true,
       description: 'Skip unit tests'
     )
     booleanParam(
       name: 'deep_tests',
       defaultValue: false,
       description: 'Do deep testing (regression, sonarqube, install, etc..)'
-    )
-    booleanParam(
-      name: 'python3',
-      defaultValue: true,
-      description: 'Building also for Pytho3'
     )
     booleanParam(
       name: 'force_upload',
@@ -70,13 +65,11 @@ pipeline {
           }
         }
         stage("Build on Linux - Python3") {
-          when { expression { return params.python3 } }
           steps {
             doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, 'main')
           }
         }
         stage("Build on Windows - Python3") {
-          when { expression { return params.python3 } }
           steps {
             doubleArchictecture('windows', 'base', false, PYVER3, CONDAENV3, 'main')
           }
