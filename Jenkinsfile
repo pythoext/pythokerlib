@@ -72,13 +72,13 @@ pipeline {
         stage("Build on Linux - Python3") {
           when { expression { return params.python3 } }
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3)
+            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, 'main')
           }
         }
         stage("Build on Windows - Python3") {
           when { expression { return params.python3 } }
           steps {
-            doubleArchictecture('windows', 'base', false, PYVER3, CONDAENV3)
+            doubleArchictecture('windows', 'base', false, PYVER3, CONDAENV3, 'main')
           }
         }
       }
