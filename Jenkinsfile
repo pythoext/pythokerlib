@@ -49,29 +49,12 @@ pipeline {
       parallel {
         stage("Build on Linux - Legacy Python") {
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, 'main')
-          }
-        }
-        stage("Build on Windows - Legacy Python") {
-          steps {
-            script {
-              try {
-                doubleArchictecture('windows', 'base', false, PYVER, CONDAENV, 'main')
-              } catch (exc) {
-                echo 'Build failed on Windows Legacy Python'
-                currentBuild.result = 'UNSTABLE'
-              }
-            }
+            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, 'anaconda')
           }
         }
         stage("Build on Linux - Python3") {
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, 'main')
-          }
-        }
-        stage("Build on Windows - Python3") {
-          steps {
-            doubleArchictecture('windows', 'base', false, PYVER3, CONDAENV3, 'main')
+            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, 'anaconda')
           }
         }
       }
