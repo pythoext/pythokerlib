@@ -30,7 +30,3 @@ STORAGE_ROOT = get_var('STORAGE_ROOT', MissingConfig).replace('\\', '/').rstrip(
 
 # This could come from global environment
 CURRENT_USER = get_var('CURRENT_USER', ANONYMOUS_USER, checkenv=False, checkglobal=True)
-
-def set_current_user(username):
-    global CURRENT_USER
-    CURRENT_USER = username

@@ -2,7 +2,7 @@ import os.path
 import re
 import posixpath
 from six import string_types
-from .config import MEDIA_SUBDIR, STORAGE_ROOT, CURRENT_USER
+from . import config
 
 FOLDER_MODE = 0o750
 USERNAME_VALIDATOR = re.compile(r'[A-Za-z0-9]+(?:[ _-][A-Za-z0-9]+)*$')
@@ -14,10 +14,10 @@ class UFSAException(RuntimeError):
     pass
 
 
-def _get_ufsa(username=CURRENT_USER):
+def _get_ufsa(username=config.CURRENT_USER):
     if not USERNAME_VALIDATOR.match(username):
         raise ValueError("Unacceptable username for UFSA") 
-    return os.path.join(STORAGE_ROOT, username, MEDIA_SUBDIR)
+    return os.path.abspath(os.path.join(config.STORAGE_ROOT, username, config.MEDIA_SUBDIR))
 
 
 def _validate_filename(filename):
@@ -33,7 +33,7 @@ def _validate_filename(filename):
         raise raiseme
 
 
-def ufsa_path(filename='', create_if_not_exists=True, username=CURRENT_USER):
+def ufsa_path(filename='', create_if_not_exists=True, username=config.CURRENT_USER):
     up = _get_ufsa(username)
     if create_if_not_exists and not os.path.isdir(up):
         os.makedirs(up, mode=FOLDER_MODE)
@@ -43,14 +43,15 @@ def ufsa_path(filename='', create_if_not_exists=True, username=CURRENT_USER):
     return up
 
 
-def ufsa_listdir(username=CURRENT_USER):
-    base = ufsa_path(username)
+def ufsa_listdir(username=config.CURRENT_USER, absname=True):
+    base = ufsa_path(username=username)
     for fname in os.listdir(base):
-        if os.path.isfile(os.path.join(base, fname)):
-            yield fname
+        aname = os.path.join(base, fname)
+        if os.path.isfile(aname):
+            yield aname if absname else fname
 
 
-def ufsa_opener(filename, mode='r', username=CURRENT_USER):
+def ufsa_opener(filename, mode='r', username=config.CURRENT_USER):
     """
     :param filename: logic name in the ufsa path
     :param mode: opener mode, all python modes are supported: r, rb, w, wb, r+, w+, a
@@ -58,4 +59,4 @@ def ufsa_opener(filename, mode='r', username=CURRENT_USER):
 
     caveats.. user MUST close the file
     """
-    return open(ufsa_path(username, filename), mode=mode)
+    return open(ufsa_path(filename=filename, username=username), mode=mode)

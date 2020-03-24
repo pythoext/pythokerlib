@@ -18,7 +18,7 @@ from pandas.tseries.offsets import MonthEnd
 from unidecode import unidecode
 
 from .gsf import to_date as _to_date, is_named_index_df, ExitNow
-from .ufsa import ufsa_opener as _get_ufsa_opener
+from .ufsa import ufsa_opener as _get_ufsa_opener, ufsa_listdir as _get_ufsa_listdir
 
 def logger_to_stderr(level=logging.INFO):
     logger = logging.getLogger()
@@ -1899,6 +1899,17 @@ def opener_ufsa(filename, mode='r'):
     caveats.. user MUST close the file
     """
     return _get_ufsa_opener(filename, mode)
+
+
+def lister_ufsa():
+    """
+    :param filename: logic name in the ufsa path
+    :param mode: opener mode, all python modes are supported: r, rb, w, wb, r+, w+, a
+    :return: a filehandler
+
+    caveats.. user MUST close the file
+    """
+    return _get_ufsa_listdir(absname=False)
 
 
 def get_attachment(attachment_name):
