@@ -30,7 +30,6 @@ def logger_to_stderr(level=logging.INFO):
     logger.handlers = [handler]
 
 
-log = logging.getLogger()
 df = None
 working_df = None
 resource = None
@@ -444,7 +443,7 @@ def drop(*series):
         elif isinstance(x, six.string_types):
             todrop.append(x)
 
-    log.debug("_DROPing %s", todrop)
+    logging.debug("_DROPing %s", todrop)
     global df
     df = df.drop(todrop, axis=1)
 
@@ -517,11 +516,11 @@ def keep(*series):
         return x[0]
 
     keepus = map(splitter, keepus)
-    log.debug("keeping %s", keepus)
+    logging.debug("keeping %s", keepus)
     global df
     df = df.drop(df.columns.difference(keepus), axis=1)
 
-    log.debug("Casting %s", typed.keys())
+    logging.debug("Casting %s", typed.keys())
     for k, cast in six.iteritems(typed):
         try:
             if cast in ('dt', 'date'):
@@ -694,10 +693,10 @@ def sanify_labels():
 
     if mapping:
         df.rename(columns=mapping, inplace=True)
-        log.debug(
+        logging.debug(
             "sanify_labels for %s labels", len(mapping) + len(index))
     else:
-        log.debug("sanify_labels: nothing to do")
+        logging.debug("sanify_labels: nothing to do")
 
 
 def grp_shift(grp, trg, shift=1):
@@ -1874,7 +1873,7 @@ def exit(msg=None):
     msg: exit's message
     """
     if msg:
-        log.info("Exit function: %s", msg)
+        logging.info("Exit function: %s", msg)
         raise ExitNow()
 
 
@@ -1887,7 +1886,7 @@ def lprint(msg):
     ----------
     msg: message to log
     """
-    log.info(msg)
+    logging.info(msg)
 
 
 def opener_ufsa(filename, mode='r'):
