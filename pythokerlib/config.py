@@ -29,4 +29,4 @@ MEDIA_SUBDIR = get_var('MEDIA_SUBDIR', 'media')
 STORAGE_ROOT = get_var('STORAGE_ROOT', MissingConfig).replace('\\', '/').rstrip('/')
 
 # This could come from global environment
-CURRENT_USER = get_var('CURRENT_USER', ANONYMOUS_USER, checkenv=False, checkglobal=True)
+CURRENT_USER = get_var('CURRENT_USER', ANONYMOUS_USER, checkenv=True, checkglobal=True)
