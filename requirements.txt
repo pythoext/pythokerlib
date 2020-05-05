@@ -1,6 +1,7 @@
 python
 ipykernel
 feather-format
+pyarrow==0.15.*
 six
 numpy==1.*
 pandas
