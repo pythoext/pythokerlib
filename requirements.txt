@@ -1,4 +1,3 @@
-python
 ipykernel
 feather-format
 pyarrow==0.15.*
