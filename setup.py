@@ -7,7 +7,7 @@ METADATA = gen_metadata(
     description="PythoKerLib package",
     email="pytho_support@prometeia.com",
     keywords="multikernel pytho jupyter",
-    url="https://github.com/prometeia/pythokerlib",
+    url="https://github.com/pythoext/pythokerlib2",
     addpythonver=False
 )
 
