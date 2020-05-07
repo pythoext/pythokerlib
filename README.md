@@ -1,1 +1,1 @@
-# PromLib
+# PromLib for Python2

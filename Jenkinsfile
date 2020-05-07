@@ -30,9 +30,7 @@ pipeline {
   }
   environment {
     PYVER = "2.7"
-    PYVER3 = "3.7"
     CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY2".replace('%2F','_').replace('/', '_')
-    CONDAENV3 = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY3".replace('%2F','_').replace('/', '_')
   }
   stages {
     stage('Bootstrap') {
@@ -50,11 +48,6 @@ pipeline {
         stage("Build on Linux - Legacy Python") {
           steps {
             doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, 'anaconda')
-          }
-        }
-        stage("Build on Linux - Python3") {
-          steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3, 'anaconda')
           }
         }
       }

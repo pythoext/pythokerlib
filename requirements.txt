@@ -1,8 +1,9 @@
+python==2.7.17
 ipykernel
 feather-format
 pyarrow==0.16.*
 six
-numpy==1.*
+numpy
 pandas
 scipy
 statsmodels
