@@ -1,12 +1,12 @@
-python==2.7.17
+python==2.7.*
 ipykernel
 feather-format
 pyarrow==0.16.*
 six
-numpy
-pandas
+numpy==1.16.*
+pandas==0.24.*
 scipy
-statsmodels
+statsmodels==0.9.*
 python-dateutil
 unidecode
 ujson
