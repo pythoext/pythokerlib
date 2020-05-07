@@ -1,3 +1,4 @@
+python==3.7.*
 ipykernel
 feather-format
 pyarrow==0.16.*
