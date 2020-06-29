@@ -427,169 +427,170 @@ def to_dt(x):
     # nan verrà convertito in NaT
     return x.map(lambda x: pd.np.nan if pd.isnull(x) else to_date(x))
 
-
-def drop(*series):
-    """
-    Remove one or more series from a DataSource.
-
-    Parameters
-    ----------
-    x :  Series of datatime as string or int64
-
-    Examples
-    --------
-
-    Drop one Series X1`, `X2` and `X3` from current data-frame:
-
-    >>> drop(X1, X2, X3)
-
-    """
-
-    # WORKAROUND: python attualmente non consente di passare più di 255
-    # parametri ad una chiamata di funzione
-    # (a meno che non vengano passati sotto forma di lista preceduta da *)
-    # In questi casi si passa un solo parametro, che contiene la lista
-    # completa.
-    if len(series) == 1 and isinstance(series[0], (list, tuple)):
-        series = series[0]
-
-    todrop = []
-    for x in series:
-        if isinstance(x, pd.Series):
-            todrop.append(x.name)
-        elif isinstance(x, six.string_types):
-            todrop.append(x)
-
-    logging.debug("_DROPing %s", todrop)
-    global df
-    df = df.drop(todrop, axis=1)
-
-
-def keep_rows():
-    """
-    Remove rows in the data-frame subject to the condition specify in the
-    filter box.
-    Empty filter cause drop of all rows of DataSource
-
-    Parameters
-    ----------
-    none
-
-    Examples
-    --------
-
-    Keep the rows of a DataSource only if Series X has values.
-
-    In the filter box
-
-    >>> isnan(X)
-
-    In the equation box
-
-    >>> keep_rows()
-
-    """
-    global df
-    df = working_df
-
-
-def keep(*series):
-    """
-    Keep one or more list of Series from a DataSource. All other Series
-    will be deleted. This function can be seen as the complementary
-    function of drop() Besides the name we add a casting type as one of:
-        *case insensitive*
-        int, i,
-        float, double, f, d
-        object, string, str
-        date, dt
-        datetime, time, timestamp
-    Parameters
-    ----------
-    x: series of datatime as string or int64
-    Examples
-    --------
-    >>> keep([col_A])
-    >>> keep(["col_A as float", col_B, "col_F as int", "col_G"])
-    """
-
-    # WORKAROUND: python attualmente non consente di passare più di 255
-    # parametri ad una chiamata di funzione (a meno che non vengano passati
-    # sotto forma di lista preceduta da *) In questi casi si passa un solo
-    # parametro, che contiene la lista completa.
-    if len(series) == 1 and isinstance(series[0], (list, tuple)):
-        series = series[0]
-
-    keepus = [y.name if isinstance(y, pd.Series) else y for y in series]
-    typed = {}
-
-    def splitter(var_type):
-        # split var / type
-        x = var_type.split(' as ')
-        if len(x) > 1:
-            col = x[0].strip()
-            cast = x[1].strip().lower()
-            typed[col] = cast
-        return x[0]
-
-    keepus = map(splitter, keepus)
-    logging.debug("keeping %s", keepus)
-    global df
-    df = df.drop(df.columns.difference(keepus), axis=1)
-
-    logging.debug("Casting %s", typed.keys())
-    for k, cast in six.iteritems(typed):
-        try:
-            if cast in ('dt', 'date'):
-                df[k] = ser_to_dt(df[k])
-            elif cast in ('datetime', 'time', 'timestamp'):
-                df[k] = ser_to_timestamp(df[k])
-            else:
-                df[k] = df[k].astype(cast)
-        except Exception as err:
-            # Series name injection into error
-            ety = type(err)
-            raise ety("{} casting {} into {}".format(repr(err), k, cast))
-    if keepus:
-        df = df[keepus]
-
-
-def dropnanrows():
-    """
-    Delete rows of missing values within a DataSource
-
-    Parameters
-    ----------
-    x : Series as string or int64
-
-    Examples
-    --------
-
-    Drop rows of missing values:
-
-    >>> dropnanrows()
-
-    """
-    global df
-    df = df.dropna(axis=0, how='all')
-
-
-def dropnancols():
-    """
-    Delete columns of missing values.
-
-    Parameters
-    ----------
-    x : Series
-
-    Examples
-    --------
-    Drop columns of missing values:
-
-    >>> dropnancols()
-    """
-    global df
-    df = df.dropna(axis=1, how='all')
+# FIXME: funzioni da reintegrare (forse non tutte) ma con delle modifiche, infatti non è possibile
+# usare df o working_df
+# def drop(*series):
+#     """
+#     Remove one or more series from a DataSource.
+#
+#     Parameters
+#     ----------
+#     x :  Series of datatime as string or int64
+#
+#     Examples
+#     --------
+#
+#     Drop one Series X1`, `X2` and `X3` from current data-frame:
+#
+#     >>> drop(X1, X2, X3)
+#
+#     """
+#
+#     # WORKAROUND: python attualmente non consente di passare più di 255
+#     # parametri ad una chiamata di funzione
+#     # (a meno che non vengano passati sotto forma di lista preceduta da *)
+#     # In questi casi si passa un solo parametro, che contiene la lista
+#     # completa.
+#     if len(series) == 1 and isinstance(series[0], (list, tuple)):
+#         series = series[0]
+#
+#     todrop = []
+#     for x in series:
+#         if isinstance(x, pd.Series):
+#             todrop.append(x.name)
+#         elif isinstance(x, six.string_types):
+#             todrop.append(x)
+#
+#     logging.debug("_DROPing %s", todrop)
+#     global df
+#     df = df.drop(todrop, axis=1)
+#
+#
+# def keep_rows():
+#     """
+#     Remove rows in the data-frame subject to the condition specify in the
+#     filter box.
+#     Empty filter cause drop of all rows of DataSource
+#
+#     Parameters
+#     ----------
+#     none
+#
+#     Examples
+#     --------
+#
+#     Keep the rows of a DataSource only if Series X has values.
+#
+#     In the filter box
+#
+#     >>> isnan(X)
+#
+#     In the equation box
+#
+#     >>> keep_rows()
+#
+#     """
+#     global df
+#     df = working_df
+#
+#
+# def keep(*series):
+#     """
+#     Keep one or more list of Series from a DataSource. All other Series
+#     will be deleted. This function can be seen as the complementary
+#     function of drop() Besides the name we add a casting type as one of:
+#         *case insensitive*
+#         int, i,
+#         float, double, f, d
+#         object, string, str
+#         date, dt
+#         datetime, time, timestamp
+#     Parameters
+#     ----------
+#     x: series of datatime as string or int64
+#     Examples
+#     --------
+#     >>> keep([col_A])
+#     >>> keep(["col_A as float", col_B, "col_F as int", "col_G"])
+#     """
+#
+#     # WORKAROUND: python attualmente non consente di passare più di 255
+#     # parametri ad una chiamata di funzione (a meno che non vengano passati
+#     # sotto forma di lista preceduta da *) In questi casi si passa un solo
+#     # parametro, che contiene la lista completa.
+#     if len(series) == 1 and isinstance(series[0], (list, tuple)):
+#         series = series[0]
+#
+#     keepus = [y.name if isinstance(y, pd.Series) else y for y in series]
+#     typed = {}
+#
+#     def splitter(var_type):
+#         # split var / type
+#         x = var_type.split(' as ')
+#         if len(x) > 1:
+#             col = x[0].strip()
+#             cast = x[1].strip().lower()
+#             typed[col] = cast
+#         return x[0]
+#
+#     keepus = map(splitter, keepus)
+#     logging.debug("keeping %s", keepus)
+#     global df
+#     df = df.drop(df.columns.difference(keepus), axis=1)
+#
+#     logging.debug("Casting %s", typed.keys())
+#     for k, cast in six.iteritems(typed):
+#         try:
+#             if cast in ('dt', 'date'):
+#                 df[k] = ser_to_dt(df[k])
+#             elif cast in ('datetime', 'time', 'timestamp'):
+#                 df[k] = ser_to_timestamp(df[k])
+#             else:
+#                 df[k] = df[k].astype(cast)
+#         except Exception as err:
+#             # Series name injection into error
+#             ety = type(err)
+#             raise ety("{} casting {} into {}".format(repr(err), k, cast))
+#     if keepus:
+#         df = df[keepus]
+#
+#
+# def dropnanrows():
+#     """
+#     Delete rows of missing values within a DataSource
+#
+#     Parameters
+#     ----------
+#     x : Series as string or int64
+#
+#     Examples
+#     --------
+#
+#     Drop rows of missing values:
+#
+#     >>> dropnanrows()
+#
+#     """
+#     global df
+#     df = df.dropna(axis=0, how='all')
+#
+#
+# def dropnancols():
+#     """
+#     Delete columns of missing values.
+#
+#     Parameters
+#     ----------
+#     x : Series
+#
+#     Examples
+#     --------
+#     Drop columns of missing values:
+#
+#     >>> dropnancols()
+#     """
+#     global df
+#     df = df.dropna(axis=1, how='all')
 
 
 def roll_mean(ser, window):
@@ -625,14 +626,13 @@ def roll_mean(ser, window):
     """
     return pd.rolling_mean(ser, window)
 
-
-def roll_apply(window, func, stepper=1):
-    global df
-    ii = [int(x) for x in
-          np.arange(0, df.shape[0] - window + 1, stepper)]
-    out = pd.Series([func(df.iloc[i:(i + window)]) for i in ii])
-    out.index = df.index[window - 1::stepper]
-    return out
+# def roll_apply(window, func, stepper=1):
+#     global df
+#     ii = [int(x) for x in
+#           np.arange(0, df.shape[0] - window + 1, stepper)]
+#     out = pd.Series([func(df.iloc[i:(i + window)]) for i in ii])
+#     out.index = df.index[window - 1::stepper]
+#     return out
 
 
 def sanify_name(name):
@@ -672,107 +672,104 @@ def sanify_name(name):
 
     return new
 
+# def sanify_labels():
+#     """
+#     Remove all invalid characters from labels in a DataSource;
+#     if unicode is found, labels will be encoded in utf8.
+#
+#     * convert all bad characters  into _ (underscore)
+#     * all labels starting with a digit will be prefixed with _ (underscore)
+#     * turn all accented unicode character into normalized form
+#
+#     Parameters
+#     ----------
+#     none
+#
+#     Examples
+#     --------
+#     Sanify lables of all Series in a data-frame:
+#
+#     >>> sanify_labels()
+#
+#     """
+#     mapping = {}
+#     index = []
+#     global df
+#     for x in df.columns:
+#         new = sanify_name(x)
+#
+#         if x != new:
+#             mapping[x] = new
+#
+#     if is_named_index_df(df):
+#         for x in df.index.names:
+#             new = sanify_name(x)
+#             index.append(new)
+#         df.index.names = index
+#
+#     if mapping:
+#         df.rename(columns=mapping, inplace=True)
+#         logging.debug(
+#             "sanify_labels for %s labels", len(mapping) + len(index))
+#     else:
+#         logging.debug("sanify_labels: nothing to do")
 
-def sanify_labels():
-    """
-    Remove all invalid characters from labels in a DataSource;
-    if unicode is found, labels will be encoded in utf8.
+# def grp_shift(grp, trg, shift=1):
+#     """
+#     Apply a shift function to each group and
+#     broadcast the result to the original data frame.
+#
+#     Parameters
+#     ----------
+#     grp : group key
+#        columns to use for grouping
+#     trg : target column
+#        target data
+#     shift : lag or lead, default value = 1
+#
+#     Returns
+#     -------
+#     df : data-frame
+#
+#     Examples
+#     --------
+#
+#     Shift a time Series by n.2 observations:
+#     >>> grp_shift(ColumnID, ColumnIDtarget, -2)
+#
+#     """
+#     _all = []
+#     for x in (grp, trg):
+#         if isinstance(x, six.string_types):
+#             _all.append(x)
+#         else:
+#             _all += x
+#     return df[_all].groupby(grp).apply(lambda x: x[trg].shift(shift))
 
-    * convert all bad characters  into _ (underscore)
-    * all labels starting with a digit will be prefixed with _ (underscore)
-    * turn all accented unicode character into normalized form
-
-    Parameters
-    ----------
-    none
-
-    Examples
-    --------
-    Sanify lables of all Series in a data-frame:
-
-    >>> sanify_labels()
-
-    """
-    mapping = {}
-    index = []
-    global df
-    for x in df.columns:
-        new = sanify_name(x)
-
-        if x != new:
-            mapping[x] = new
-
-    if is_named_index_df(df):
-        for x in df.index.names:
-            new = sanify_name(x)
-            index.append(new)
-        df.index.names = index
-
-    if mapping:
-        df.rename(columns=mapping, inplace=True)
-        logging.debug(
-            "sanify_labels for %s labels", len(mapping) + len(index))
-    else:
-        logging.debug("sanify_labels: nothing to do")
-
-
-def grp_shift(grp, trg, shift=1):
-    """
-    Apply a shift function to each group and
-    broadcast the result to the original data frame.
-
-    Parameters
-    ----------
-    grp : group key
-       columns to use for grouping
-    trg : target column
-       target data
-    shift : lag or lead, default value = 1
-
-    Returns
-    -------
-    df : data-frame
-
-    Examples
-    --------
-
-    Shift a time Series by n.2 observations:
-    >>> grp_shift(ColumnID, ColumnIDtarget, -2)
-
-    """
-    _all = []
-    for x in (grp, trg):
-        if isinstance(x, six.string_types):
-            _all.append(x)
-        else:
-            _all += x
-    return df[_all].groupby(grp).apply(lambda x: x[trg].shift(shift))
-
-
-def lookup(key):
-    """
-    Map values of a Series using input correspondence that must be
-    described as parameters.
-
-    Parameters
-    ----------
-    key : Series or scalar for the lookup
-
-    Returns
-    -------
-    y : Series
-        Same index as caller
-
-    Examples
-    --------
-    >>> lookup(ColumnID)
-
-    """
-    global global_safe_env
-    get = global_safe_env.get
-    if isinstance(key, pd.Series):
-        return key.map(lambda x: get(x, np.nan))
-    return get(key, np.nan)
+# def lookup(key):
+#     """
+#     Map values of a Series using input correspondence that must be
+#     described as parameters.
+#
+#     Parameters
+#     ----------
+#     key : Series or scalar for the lookup
+#
+#     Returns
+#     -------
+#     y : Series
+#         Same index as caller
+#
+#     Examples
+#     --------
+#     >>> lookup(ColumnID)
+#
+#     """
+#     global global_safe_env
+#     get = global_safe_env.get
+#     if isinstance(key, pd.Series):
+#         return key.map(lambda x: get(x, np.nan))
+#     return get(key, np.nan)
 
 
 def invalues(ser, choices):
@@ -861,37 +858,35 @@ def asstr(ser):
     """
     return ser.map(str)
 
+# def set_pk(*keys):
+#     """
+#     Set the DataSource index (the row labels) to the values of one or
+#     more existing columns. The columns with the index value will be
+#     automatically erased from the DataSource.
+#
+#     Parameters
+#     ----------
+#     keys : column label or list of column labels
+#
+#     Examples
+#     --------
+#
+#     Set the data-frame index equal to the values contained in Series X1
+#     and X2:
+#
+#     >>> set_pk(X1, X2)
+#
+#     """
+#     keys = [y.name if isinstance(y, pd.Series) else y for y in keys]
+#     global df
+#     df.set_index(keys, inplace=True, drop=True)
 
-def set_pk(*keys):
-    """
-    Set the DataSource index (the row labels) to the values of one or
-    more existing columns. The columns with the index value will be
-    automatically erased from the DataSource.
-
-    Parameters
-    ----------
-    keys : column label or list of column labels
-
-    Examples
-    --------
-
-    Set the data-frame index equal to the values contained in Series X1
-    and X2:
-
-    >>> set_pk(X1, X2)
-
-    """
-    keys = [y.name if isinstance(y, pd.Series) else y for y in keys]
-    global df
-    df.set_index(keys, inplace=True, drop=True)
-
-
-def reset_pk():
-    """
-    XXX
-    """
-    global df
-    df.reset_index(inplace=True)
+# def reset_pk():
+#     """
+#     XXX
+#     """
+#     global df
+#     df.reset_index(inplace=True)
 
 
 def ascending(ser):
@@ -1111,55 +1106,53 @@ def first(n=1):
     """
     return slice(None, n)
 
+# def rename(src, dst):
+#     """
+#     Rename a Series within a DataSource.
+#
+#     Parameters
+#     ----------
+#     src : Name of the Series to be renamed
+#     dst : New name of the Series
+#
+#     Examples
+#     --------
+#     >>> rename("old_name", "new_name")
+#
+#     """
+#     global df
+#     return df.rename(columns={src: dst}, inplace=True)
 
-def rename(src, dst):
-    """
-    Rename a Series within a DataSource.
-
-    Parameters
-    ----------
-    src : Name of the Series to be renamed
-    dst : New name of the Series
-
-    Examples
-    --------
-    >>> rename("old_name", "new_name")
-
-    """
-    global df
-    return df.rename(columns={src: dst}, inplace=True)
-
-
-def pop(ser):
-    """
-    Return a new Series equal to Series in a DataSource, and drop that
-    Series from the DataSource.
-
-    Parameters
-    ----------
-    ser : Series to be copied and to be dropped
-
-    Returns
-    -------
-    out : Series with the same values as ser
-
-    Examples
-    --------
-    Assign Series X to a new Series Y and drop X from the DataSource:
-
-    >>> pop(X)
-
-    The previous operation can be obtained also in two steps with:
-
-    >>> Y = X
-    >>> drop(X)
-
-    """
-    global df
-    if isinstance(ser, pd.Series):
-        df.pop(ser.name)
-    else:
-        df.pop(ser)
+# def pop(ser):
+#     """
+#     Return a new Series equal to Series in a DataSource, and drop that
+#     Series from the DataSource.
+#
+#     Parameters
+#     ----------
+#     ser : Series to be copied and to be dropped
+#
+#     Returns
+#     -------
+#     out : Series with the same values as ser
+#
+#     Examples
+#     --------
+#     Assign Series X to a new Series Y and drop X from the DataSource:
+#
+#     >>> pop(X)
+#
+#     The previous operation can be obtained also in two steps with:
+#
+#     >>> Y = X
+#     >>> drop(X)
+#
+#     """
+#     global df
+#     if isinstance(ser, pd.Series):
+#         df.pop(ser.name)
+#     else:
+#         df.pop(ser)
 
 
 # R.M.: qui tutte le funzioni matematiche etc di numpy.
@@ -1572,29 +1565,28 @@ def to_timestamp(d):
     """
     return pd.Timestamp(d)
 
-
 # ho aggiunto questa esplicita, invece che avere solo pk nel dizionario
 # sotto
-def get_pk():
-    """
-    Get the current DataSource index.
-
-    Parameters
-    ----------
-    none
-
-    Returns
-    -------
-    out : index values
-
-    Examples
-    --------
-
-    >>> get_pk()
-
-    """
-    global df
-    return df.index
+# def get_pk():
+#     """
+#     Get the current DataSource index.
+#
+#     Parameters
+#     ----------
+#     none
+#
+#     Returns
+#     -------
+#     out : index values
+#
+#     Examples
+#     --------
+#
+#     >>> get_pk()
+#
+#     """
+#     global df
+#     return df.index
 
 
 def isnan(x):
@@ -1637,75 +1629,72 @@ def isinf(x):
     """
     return np.isinf(x)
 
-
 # ho aggiunto queste due per ordinare un dataframe
-def sort_asc(*keys):
-    """
-    Sort a DataSource by the values in one or more columns in ascending
-    order. NaNs are placed at the end.
+# def sort_asc(*keys):
+#     """
+#     Sort a DataSource by the values in one or more columns in ascending
+#     order. NaNs are placed at the end.
+#
+#     Parameters
+#     ----------
+#     ser : Name of the Series. Accepts a column name or a list for a nested
+#           sort.
+#
+#     Examples
+#     --------
+#     Sort by only the value of a Series
+#
+#     >>> sort_asc(CustomerID)
+#
+#     Sort by only the value of more Series
+#
+#     >>> sort_asc(CustomerID, Name)
+#
+#     """
+#     keys = list(keys)
+#     global df
+#     df.sort(columns=keys, ascending=True, inplace=True)
 
-    Parameters
-    ----------
-    ser : Name of the Series. Accepts a column name or a list for a nested
-          sort.
+# def sort_desc(*keys):
+#     """
+#     Sort a DataSource by the values in one or more columns in descending
+#     order. NaNs are placed at the end.
+#
+#     Parameters
+#     ----------
+#     ser : Name of the Series. Accepts a column name or a list for a nested
+#           sort.
+#
+#     Examples
+#     --------
+#     Sort by only the value of a Series
+#
+#     >>> sort_desc(CustomerID)
+#
+#     Sort by only the value of more Series
+#
+#     >>> sort_desc(CustomerID, Name)
+#
+#     """
+#     keys = list(keys)
+#     global df
+#     df.sort(columns=keys, ascending=False, inplace=True)
 
-    Examples
-    --------
-    Sort by only the value of a Series
-
-    >>> sort_asc(CustomerID)
-
-    Sort by only the value of more Series
-
-    >>> sort_asc(CustomerID, Name)
-
-    """
-    keys = list(keys)
-    global df
-    df.sort(columns=keys, ascending=True, inplace=True)
-
-
-def sort_desc(*keys):
-    """
-    Sort a DataSource by the values in one or more columns in descending
-    order. NaNs are placed at the end.
-
-    Parameters
-    ----------
-    ser : Name of the Series. Accepts a column name or a list for a nested
-          sort.
-
-    Examples
-    --------
-    Sort by only the value of a Series
-
-    >>> sort_desc(CustomerID)
-
-    Sort by only the value of more Series
-
-    >>> sort_desc(CustomerID, Name)
-
-    """
-    keys = list(keys)
-    global df
-    df.sort(columns=keys, ascending=False, inplace=True)
-
-
-def index_values(level):
-    """
-    Return vector of label values for requested level, equal to the length
-    of the index.
-
-    Parameters
-    ----------
-    level : int or level name
-
-    Returns
-    -------
-    values : ndarray
-    """
-    global df
-    return df.index.get_level_values(level)
+# def index_values(level):
+#     """
+#     Return vector of label values for requested level, equal to the length
+#     of the index.
+#
+#     Parameters
+#     ----------
+#     level : int or level name
+#
+#     Returns
+#     -------
+#     values : ndarray
+#     """
+#     global df
+#     return df.index.get_level_values(level)
 
 
 def random_db(cols=None, rows=100):
@@ -1730,160 +1719,151 @@ def random_db(cols=None, rows=100):
         index=np.arange(rows),
         columns=cols)
 
+# def head(n=1000):
+#     """
+#     Set the current db with the first rows.
+#
+#     Parameters
+#     ----------
+#     n: Number of rows. default=1000
+#     """
+#     if not isinstance(n, int):
+#         raise ValueError("Number of row must be an integer value.")
+#     global df
+#     if n < len(df):
+#         df = df.head(n)
 
-def head(n=1000):
-    """
-    Set the current db with the first rows.
+# def sample(samplesize=1000):
+#     """
+#     Set the current db with a sample of data.
+#
+#     Parameters
+#     ----------
+#     samplesize: Number of rows. Sample size.
+#                 default=1000
+#     """
+#     if not isinstance(samplesize, int):
+#         raise ValueError("Sample size must be an integer value.")
+#
+#     global df
+#     if samplesize < len(df):
+#         idxs = [True] * samplesize + [False] * (len(df) - samplesize)
+#         pd.np.random.shuffle(idxs)
+#         df = df[idxs]
 
-    Parameters
-    ----------
-    n: Number of rows. default=1000
-    """
-    if not isinstance(n, int):
-        raise ValueError("Number of row must be an integer value.")
-    global df
-    if n < len(df):
-        df = df.head(n)
+# def distinct(*cols):
+#     """
+#     XXX
+#     """
+#     global df
+#     if cols:
+#         col_names = []
+#         for x in cols:
+#             if isinstance(x, pd.Series):
+#                 col_names.append(x.name)
+#             else:
+#                 col_names.append(x)
+#         df.drop_duplicates(col_names, inplace=True)
+#     else:
+#         df.drop_duplicates(inplace=True)
 
+# def pivot(index=None, columns=None, values=None, **kw):
+#     """
+#     Reshape data (produce a pivot table) based on column values.
+#     Uses unique values from index / columns to form axes
+#
+#     Parameters
+#     ----------
+#     index : string or object
+#             Column name to use to make new frame’s index
+#     columns : string or object
+#               Column name to use to make new frame’s columns
+#     values : string or object, optional
+#              Column name to use for populating new frame’s values
+#
+#     """
+#     if isinstance(index, pd.Series):
+#         index = index.name
+#     if isinstance(columns, pd.Series):
+#         columns = columns.name
+#     if isinstance(values, pd.Series):
+#         values = values.name
+#
+#     global df
+#     df = pd.pivot_table(
+#         df, index=index, columns=columns, values=values, **kw)
 
-def sample(samplesize=1000):
-    """
-    Set the current db with a sample of data.
+# def unpivot(keys=None, columns=None, value_name='value', var_name='variable'):
+#     global df
+#     df = pd.melt(
+#         df,
+#         id_vars=keys,
+#         value_vars=columns,
+#         var_name=var_name,
+#         value_name=value_name)
 
-    Parameters
-    ----------
-    samplesize: Number of rows. Sample size.
-                default=1000
-    """
-    if not isinstance(samplesize, int):
-        raise ValueError("Sample size must be an integer value.")
+# def full_transpose():
+#     """
+#     Transpose the current data-frame
+#     index and columns.
+#     """
+#     global df
+#     df = df.transpose()
 
-    global df
-    if samplesize < len(df):
-        idxs = [True] * samplesize + [False] * (len(df) - samplesize)
-        pd.np.random.shuffle(idxs)
-        df = df[idxs]
+# def set_db(newdf, sanify_labels=False):
+#     """
+#     Substitute current data-frame with df.
+#
+#     Parameters
+#     ----------
+#     df: new data-frame
+#     sanify_labels: (default: False) Remove all invalid characters from
+#         labels in a DataSource
+#
+#     Examples
+#     --------
+#     set_db( db.transpose() )
+#     """
+#     if not isinstance(newdf, pd.DataFrame):
+#         raise ValueError("set_db must be used with a valid data-frame")
+#
+#     global df
+#     df = newdf
+#     if sanify_labels:
+#         sanify_labels()
 
+# def stack(level=-1):
+#     """
+#     Pivot a level of the column labels.
+#     new data-frame have a hierarchical index with a new
+#     inner-most level of row labels.
+#
+#     Parameters
+#     ----------
+#     level: int or column name (or list of them)
+#     """
+#     global df
+#     ret = df.stack(level=level)
+#
+#     if isinstance(ret, pd.Series):
+#         ret = pd.DataFrame(ret)
+#
+#     df = ret
 
-def distinct(*cols):
-    """
-    XXX
-    """
-    global df
-    if cols:
-        col_names = []
-        for x in cols:
-            if isinstance(x, pd.Series):
-                col_names.append(x.name)
-            else:
-                col_names.append(x)
-        df.drop_duplicates(col_names, inplace=True)
-    else:
-        df.drop_duplicates(inplace=True)
-
-
-def pivot(index=None, columns=None, values=None, **kw):
-    """
-    Reshape data (produce a pivot table) based on column values.
-    Uses unique values from index / columns to form axes
-
-    Parameters
-    ----------
-    index : string or object
-            Column name to use to make new frame’s index
-    columns : string or object
-              Column name to use to make new frame’s columns
-    values : string or object, optional
-             Column name to use for populating new frame’s values
-
-    """
-    if isinstance(index, pd.Series):
-        index = index.name
-    if isinstance(columns, pd.Series):
-        columns = columns.name
-    if isinstance(values, pd.Series):
-        values = values.name
-
-    global df
-    df = pd.pivot_table(
-        df, index=index, columns=columns, values=values, **kw)
-
-
-def unpivot(keys=None, columns=None, value_name='value', var_name='variable'):
-    global df
-    df = pd.melt(
-        df,
-        id_vars=keys,
-        value_vars=columns,
-        var_name=var_name,
-        value_name=value_name)
-
-
-def full_transpose():
-    """
-    Transpose the current data-frame
-    index and columns.
-    """
-    global df
-    df = df.transpose()
-
-
-def set_db(newdf, sanify_labels=False):
-    """
-    Substitute current data-frame with df.
-
-    Parameters
-    ----------
-    df: new data-frame
-    sanify_labels: (default: False) Remove all invalid characters from
-        labels in a DataSource
-
-    Examples
-    --------
-    set_db( db.transpose() )
-    """
-    if not isinstance(newdf, pd.DataFrame):
-        raise ValueError("set_db must be used with a valid data-frame")
-
-    global df
-    df = newdf
-    if sanify_labels:
-        sanify_labels()
-
-
-def stack(level=-1):
-    """
-    Pivot a level of the column labels.
-    new data-frame have a hierarchical index with a new
-    inner-most level of row labels.
-
-    Parameters
-    ----------
-    level: int or column name (or list of them)
-    """
-    global df
-    ret = df.stack(level=level)
-
-    if isinstance(ret, pd.Series):
-        ret = pd.DataFrame(ret)
-
-    df = ret
-
-
-def unstack(level=-1):
-    """
-    Pivot a level of the index labels.
-    new data-frame have a new level of column
-    labels whose inner-most level consists
-    of the pivoted index labels.
-
-    Parameters
-    ----------
-    level: int or column name (or list of them)
-    """
-    # FIXME: verificare il funzionamento quando torna una serie
-    global df
-    df = df.unstack(level=level)
+# def unstack(level=-1):
+#     """
+#     Pivot a level of the index labels.
+#     new data-frame have a new level of column
+#     labels whose inner-most level consists
+#     of the pivoted index labels.
+#
+#     Parameters
+#     ----------
+#     level: int or column name (or list of them)
+#     """
+#     # FIXME: verificare il funzionamento quando torna una serie
+#     global df
+#     df = df.unstack(level=level)
 
 
 def log_growth_rate(start_value, ser):
@@ -1893,18 +1873,17 @@ def log_growth_rate(start_value, ser):
     """
     return ser.cumsum() + start_value
 
-
-def exit(msg=None):
-    """
-    exit macro's execution
-
-    Parameters
-    ----------
-    msg: exit's message
-    """
-    if msg:
-        logging.info("Exit function: %s", msg)
-        raise ExitNow()
+# def exit(msg=None):
+#     """
+#     exit macro's execution
+#
+#     Parameters
+#     ----------
+#     msg: exit's message
+#     """
+#     if msg:
+#         logging.info("Exit function: %s", msg)
+#         raise ExitNow()
 
 
 def lprint(msg):
@@ -1940,165 +1919,162 @@ def lister_ufsa():
     """
     return _get_ufsa_listdir(absname=False)
 
+# def get_attachment(attachment_name):
+#     """
+#     get an attachment of the running macro
+#
+#     Parameters
+#     ----------
+#     attachment_name: name of the attachment
+#     """
+#     if resource is None:
+#         raise RuntimeError("Resource not defined!")
+#     if not hasattr(resource, "get_attachment"):
+#         raise RuntimeError("Invalid resource!")
+#     return getattr(resource, "get_attachment")(attachment_name)
 
-def get_attachment(attachment_name):
-    """
-    get an attachment of the running macro
+# def add_attachment(attachment_name, filestream, description="",
+#                    overwrite=True):
+#     """
+#     add an attachment to the running macro
+#
+#     Parameters
+#     ----------
+#     attachment_name: name of the attachment
+#     filestream: file stream to write
+#     description: a description of the attachment [default: empty string]
+#     overwrite: if overwrite existing attachment with same name
+#         [default: True]
+#     """
+#     if resource is None:
+#         raise RuntimeError("Resource not defined!")
+#     if not hasattr(resource, "add_attachment"):
+#         raise RuntimeError("Invalid resource!")
+#     getattr(resource, "add_attachment")(attachment_name, filestream, description=description,
+#             overwrite=overwrite)
+#     getattr(resource, 'save')()
 
-    Parameters
-    ----------
-    attachment_name: name of the attachment
-    """
-    if resource is None:
-        raise RuntimeError("Resource not defined!")
-    if not hasattr(resource, "get_attachment"):
-        raise RuntimeError("Invalid resource!")
-    return getattr(resource, "get_attachment")(attachment_name)
-
-
-def add_attachment(attachment_name, filestream, description="",
-                   overwrite=True):
-    """
-    add an attachment to the running macro
-
-    Parameters
-    ----------
-    attachment_name: name of the attachment
-    filestream: file stream to write
-    description: a description of the attachment [default: empty string]
-    overwrite: if overwrite existing attachment with same name
-        [default: True]
-    """
-    if resource is None:
-        raise RuntimeError("Resource not defined!")
-    if not hasattr(resource, "add_attachment"):
-        raise RuntimeError("Invalid resource!")
-    getattr(resource, "add_attachment")(attachment_name, filestream, description=description,
-            overwrite=overwrite)
-    getattr(resource, 'save')()
-
-
-def functions_env():
-    global df
-
-    functions = {
-        # moduli / obj
-        "numpy": np,
-        "pandas": pd,
-        "sps": sps,
-        "scipy": scipy,
-        "statsmodels": statsmodels,
-
-        # facilities
-
-        "linalg": np.linalg,
-        "db": df,
-        "dblen": len(df) if df is not None else None,
-        "set_db": set_db,
-        "math": math,
-        "random_db": random_db,
-        "exit": exit,
-        "lprint": lprint,
-        "open_file": opener_ufsa,
-
-        # funzioni STR
-        "pad": pad,
-        "lpad": lpad,
-        "rpad": rpad,
-        "cpad": cpad,
-
-        # funzioni statistiche
-        "nanmin": nanmin,  # np.nanmin,
-        "nanmax": nanmax,  # np.nanmax,
-        "nansum": nansum,  # np.nansum,
-        "mean": mean,  # np.mean,
-        "std": std,  # np.std,
-
-        # funzioni matematiche
-        "sum": sum,  # np.sum,   #buildin override
-        "log": log,  # np.log,   #buildin override
-        "exp": exp,  # np.exp,
-        "sqrt": sqrt,
-        # diff" :diff,   #np.diff,
-        "round": round,  # np.round,
-        "floor": floor,  # np.floor,
-        "rand": np.random,
-
-        # tipi / tipizzatori
-        "isnan": isnan,  # pd.isnull,
-        "isinf": isinf,  # np.isinf,
-        "isnotnan": isnotnan,
-        "asstr": asstr,
-        "ser_to_istr": ser_to_istr,
-
-        # operatori logici
-        "land": np.logical_and,
-        "lor": np.logical_or,
-        "lxor": np.logical_xor,
-
-        # datetime / Timestamp
-        "ser_to_dt": ser_to_dt,
-        "ser_to_timestamp": ser_to_timestamp,
-        "to_date": to_date,
-        "reldelta": reldelta,
-        "today": today,
-        "months_diff": months_diff,
-        "months_between": months_between,
-
-        # parametri costanti
-        "delta30d": np.timedelta64(1, '30D'),
-        "delta1d": np.timedelta64(1, 'D'),
-        "nan": np.nan,
-
-        # intra-groupby-functions
-        "grp_shift": grp_shift,
-
-        # index/join/append/reshaping/sorting
-        "set_pk": set_pk,
-        "get_pk": get_pk,
-        "reset_pk": reset_pk,
-        "drop": drop,
-        "keep_rows": keep_rows,
-        "keep": keep,
-        "dropnanrows": dropnanrows,
-        "dropnancols": dropnancols,
-        "distinct": distinct,
-        "sanify_labels": sanify_labels,
-        "rename": rename,
-        "pop": pop,
-        "sort_asc": sort_asc,
-        "sort_desc": sort_desc,
-        "index_values": index_values,
-
-        # ordering
-        "ascending": ascending,
-        "descending": descending,
-
-        # rolling windows
-        "roll_mean": roll_mean,
-        "roll_apply": roll_apply,
-        "log_growth_rate": log_growth_rate,
-
-        # trasposizioni/pivot
-        "invalues": invalues,
-        "notinvalues": notinvalues,
-        "lookup": lookup,
-        "lag": lag,
-        "lead": lead,
-        "pivot": pivot,
-        "unpivot": unpivot,
-        "stack": stack,
-        "unstack": unstack,
-        "full_transpose": full_transpose,
-
-        # slicing
-        "last": last,
-        "first": first,
-        "head": head,
-        "sample": sample,
-
-        # macro specific
-        "get_attachment": get_attachment,
-        "add_attachment": add_attachment,
-    }
-    return functions
+# def functions_env():
+#     global df
+#
+#     functions = {
+#         # moduli / obj
+#         "numpy": np,
+#         "pandas": pd,
+#         "sps": sps,
+#         "scipy": scipy,
+#         "statsmodels": statsmodels,
+#
+#         # facilities
+#
+#         "linalg": np.linalg,
+#         "db": df,
+#         "dblen": len(df) if df is not None else None,
+#         "set_db": set_db,
+#         "math": math,
+#         "random_db": random_db,
+#         "exit": exit,
+#         "lprint": lprint,
+#         "open_file": opener_ufsa,
+#
+#         # funzioni STR
+#         "pad": pad,
+#         "lpad": lpad,
+#         "rpad": rpad,
+#         "cpad": cpad,
+#
+#         # funzioni statistiche
+#         "nanmin": nanmin,  # np.nanmin,
+#         "nanmax": nanmax,  # np.nanmax,
+#         "nansum": nansum,  # np.nansum,
+#         "mean": mean,  # np.mean,
+#         "std": std,  # np.std,
+#
+#         # funzioni matematiche
+#         "sum": sum,  # np.sum,   #buildin override
+#         "log": log,  # np.log,   #buildin override
+#         "exp": exp,  # np.exp,
+#         "sqrt": sqrt,
+#         # diff" :diff,   #np.diff,
+#         "round": round,  # np.round,
+#         "floor": floor,  # np.floor,
+#         "rand": np.random,
+#
+#         # tipi / tipizzatori
+#         "isnan": isnan,  # pd.isnull,
+#         "isinf": isinf,  # np.isinf,
+#         "isnotnan": isnotnan,
+#         "asstr": asstr,
+#         "ser_to_istr": ser_to_istr,
+#
+#         # operatori logici
+#         "land": np.logical_and,
+#         "lor": np.logical_or,
+#         "lxor": np.logical_xor,
+#
+#         # datetime / Timestamp
+#         "ser_to_dt": ser_to_dt,
+#         "ser_to_timestamp": ser_to_timestamp,
+#         "to_date": to_date,
+#         "reldelta": reldelta,
+#         "today": today,
+#         "months_diff": months_diff,
+#         "months_between": months_between,
+#
+#         # parametri costanti
+#         "delta30d": np.timedelta64(1, '30D'),
+#         "delta1d": np.timedelta64(1, 'D'),
+#         "nan": np.nan,
+#
+#         # intra-groupby-functions
+#         "grp_shift": grp_shift,
+#
+#         # index/join/append/reshaping/sorting
+#         "set_pk": set_pk,
+#         "get_pk": get_pk,
+#         "reset_pk": reset_pk,
+#         "drop": drop,
+#         "keep_rows": keep_rows,
+#         "keep": keep,
+#         "dropnanrows": dropnanrows,
+#         "dropnancols": dropnancols,
+#         "distinct": distinct,
+#         "sanify_labels": sanify_labels,
+#         "rename": rename,
+#         "pop": pop,
+#         "sort_asc": sort_asc,
+#         "sort_desc": sort_desc,
+#         "index_values": index_values,
+#
+#         # ordering
+#         "ascending": ascending,
+#         "descending": descending,
+#
+#         # rolling windows
+#         "roll_mean": roll_mean,
+#         "roll_apply": roll_apply,
+#         "log_growth_rate": log_growth_rate,
+#
+#         # trasposizioni/pivot
+#         "invalues": invalues,
+#         "notinvalues": notinvalues,
+#         "lookup": lookup,
+#         "lag": lag,
+#         "lead": lead,
+#         "pivot": pivot,
+#         "unpivot": unpivot,
+#         "stack": stack,
+#         "unstack": unstack,
+#         "full_transpose": full_transpose,
+#
+#         # slicing
+#         "last": last,
+#         "first": first,
+#         "head": head,
+#         "sample": sample,
+#
+#         # macro specific
+#         "get_attachment": get_attachment,
+#         "add_attachment": add_attachment,
+#     }
+#     return functions
