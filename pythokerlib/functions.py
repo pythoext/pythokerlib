@@ -8,10 +8,11 @@ import string
 import six
 import unicodedata
 import numpy as np
-import pandas as P
+import pandas as pd
 import scipy
 import scipy.stats as sps
 import statsmodels
+import feather
 
 from dateutil.relativedelta import relativedelta
 from pandas.tseries.offsets import MonthEnd
@@ -19,6 +20,8 @@ from unidecode import unidecode
 
 from .gsf import to_date as _to_date, is_named_index_df, ExitNow
 from .ufsa import ufsa_opener as _get_ufsa_opener, ufsa_listdir as _get_ufsa_listdir
+from . import config
+
 
 def logger_to_stderr(level=logging.INFO):
     logger = logging.getLogger()
@@ -34,6 +37,20 @@ df = None
 working_df = None
 resource = None
 global_safe_env = dict()
+
+
+def get_db():
+    if not config.NOTEBOOOK_DB_PATH:
+        return pd.DataFrame()
+    infile = config.NOTEBOOOK_DB_PATH
+    if infile.endswith(".jd"):
+        if config.SERVER_HAS_FEATHER:
+            db = feather.read_dataframe(infile)
+        else:
+            db = pd.read_csv(infile)
+    else:
+        pd.DataFrame()
+    return db
 
 
 def pad(var, width, pos='left', filler='0'):
@@ -77,6 +94,7 @@ def pad(var, width, pos='left', filler='0'):
 
 
     """
+
     def padder(var, width=width, pos=pos, filler=filler):
         if pos == 'left':
             f = 'ljust'
@@ -87,10 +105,9 @@ def pad(var, width, pos='left', filler='0'):
         var = '%s' % var
         return getattr(var, f)(width, filler)
 
-    if isinstance(var, P.Series):
+    if isinstance(var, pd.Series):
         return var.map(padder)
     return padder(var)
-
 
 
 def lpad(var, width, filler='0'):
@@ -217,12 +234,12 @@ def reldelta(dt1, dt2, sorted=False):
     [relativedelta(days=-13)]
 
     """
-    if isinstance(dt1, P.Series) and isinstance(dt2, P.Series):
-        return P.Series(
+    if isinstance(dt1, pd.Series) and isinstance(dt2, pd.Series):
+        return pd.Series(
             [relativedelta(a, b)
              if not sorted else relativedelta(a, b)
              if a > b else relativedelta(b, a)
-             if P.notnull([a, b]).all()
+             if pd.notnull([a, b]).all()
              else None for a, b in zip(dt1, dt2)])
 
 
@@ -248,10 +265,10 @@ def months_diff(dt1, dt2):
     ser : Series of integer with the differences in months.
 
     """
-    if isinstance(dt1, P.Series) and isinstance(dt2, P.Series):
-        return P.Series(
+    if isinstance(dt1, pd.Series) and isinstance(dt2, pd.Series):
+        return pd.Series(
             [(a.year * 12 + a.month) - (b.year * 12 + b.month)
-             if P.notnull([a, b]).all()
+             if pd.notnull([a, b]).all()
              else None for a, b in zip(dt1, dt2)])
 
 
@@ -272,13 +289,13 @@ def months_between(dt1, dt2):
     ser : Series of integer with the differences in months.
 
     """
-    if (not isinstance(dt1, P.Series) or not isinstance(dt2, P.Series)):
+    if (not isinstance(dt1, pd.Series) or not isinstance(dt2, pd.Series)):
         return
     # differenza in mesi
     dt3 = []
     for a, b in zip(dt1, dt2):
-        if P.isnull(a) or P.isnull(b):
-            dt3.append(P.np.nan)
+        if pd.isnull(a) or pd.isnull(b):
+            dt3.append(pd.np.nan)
             continue
         sign = 1
         if a < b:
@@ -293,7 +310,7 @@ def months_between(dt1, dt2):
             delta = (a.day - b.day) / 31.0
             diff = dm + delta
         dt3.append(sign * diff)
-    return P.Series(dt3)
+    return pd.Series(dt3)
 
 
 def ser_to_dt(x):
@@ -325,7 +342,7 @@ def ser_to_dt(x):
 
     """
     # nan verrà convertito in NaT
-    return x.map(lambda x: P.np.nan if P.isnull(x) else to_date(x))
+    return x.map(lambda x: pd.np.nan if pd.isnull(x) else to_date(x))
 
 
 def ser_to_timestamp(x):
@@ -344,7 +361,7 @@ def ser_to_timestamp(x):
     --------
     see to_timestamp for help on handled formats.
     """
-    return x.apply(P.Timestamp)
+    return x.apply(pd.Timestamp)
 
 
 def ser_to_istr(ser, missing=''):
@@ -373,8 +390,8 @@ def ser_to_istr(ser, missing=''):
 
     if ser.dtype.kind == 'f':
         return ser.apply(
-            lambda x, missing=missing: missing if P.isnull(x)
-            else str(int(x)) if P.np.mod(x, 1) == 0 else str(x))
+            lambda x, missing=missing: missing if pd.isnull(x)
+            else str(int(x)) if pd.np.mod(x, 1) == 0 else str(x))
 
     return ser.astype(str)
 
@@ -408,7 +425,7 @@ def to_dt(x):
 
     """
     # nan verrà convertito in NaT
-    return x.map(lambda x: P.np.nan if P.isnull(x) else to_date(x))
+    return x.map(lambda x: pd.np.nan if pd.isnull(x) else to_date(x))
 
 
 def drop(*series):
@@ -438,7 +455,7 @@ def drop(*series):
 
     todrop = []
     for x in series:
-        if isinstance(x, P.Series):
+        if isinstance(x, pd.Series):
             todrop.append(x.name)
         elif isinstance(x, six.string_types):
             todrop.append(x)
@@ -503,7 +520,7 @@ def keep(*series):
     if len(series) == 1 and isinstance(series[0], (list, tuple)):
         series = series[0]
 
-    keepus = [y.name if isinstance(y, P.Series) else y for y in series]
+    keepus = [y.name if isinstance(y, pd.Series) else y for y in series]
     typed = {}
 
     def splitter(var_type):
@@ -606,14 +623,14 @@ def roll_mean(ser, window):
            [ 6.5,  7.5]])
 
     """
-    return P.rolling_mean(ser, window)
+    return pd.rolling_mean(ser, window)
 
 
 def roll_apply(window, func, stepper=1):
     global df
     ii = [int(x) for x in
           np.arange(0, df.shape[0] - window + 1, stepper)]
-    out = P.Series([func(df.iloc[i:(i + window)]) for i in ii])
+    out = pd.Series([func(df.iloc[i:(i + window)]) for i in ii])
     out.index = df.index[window - 1::stepper]
     return out
 
@@ -753,9 +770,10 @@ def lookup(key):
     """
     global global_safe_env
     get = global_safe_env.get
-    if isinstance(key, P.Series):
+    if isinstance(key, pd.Series):
         return key.map(lambda x: get(x, np.nan))
     return get(key, np.nan)
+
 
 def invalues(ser, choices):
     """
@@ -780,6 +798,7 @@ def invalues(ser, choices):
     """
     return ser.isin(choices)
 
+
 def notinvalues(ser, choices):
     """
     Check if values of a Series are not in a list of values.
@@ -803,6 +822,7 @@ def notinvalues(ser, choices):
     """
     return ser.map(lambda x: x not in choices)
 
+
 def isnotnan(x):
     """
     Check for non empty values (NaN) inside a Series.
@@ -820,7 +840,8 @@ def isnotnan(x):
     >>> isnotnan(X)
 
     """
-    return np.invert(P.isnull(x))
+    return np.invert(pd.isnull(x))
+
 
 def asstr(ser):
     """
@@ -860,7 +881,7 @@ def set_pk(*keys):
     >>> set_pk(X1, X2)
 
     """
-    keys = [y.name if isinstance(y, P.Series) else y for y in keys]
+    keys = [y.name if isinstance(y, pd.Series) else y for y in keys]
     global df
     df.set_index(keys, inplace=True, drop=True)
 
@@ -906,6 +927,7 @@ def ascending(ser):
     """
     return np.sort(ser)
 
+
 def descending(ser):
     """
     Sort a Series in descending order.
@@ -937,6 +959,7 @@ def descending(ser):
 
     """
     return np.sort(ser)[::-1]
+
 
 def lag(ser, lag=1):
     """
@@ -980,6 +1003,7 @@ def lag(ser, lag=1):
     # "lead(ser,2)" is the same as "ser.shift(-2)"
     return ser.shift(abs(lag))
 
+
 def lead(ser, lead=1):
     """
     Advance a Series by a specified time step (i.e. number of observations)
@@ -1020,6 +1044,7 @@ def lead(ser, lead=1):
     # "lead(ser,2)" is the same as "ser.shift(-2)"
     return ser.shift(-abs(lead))
 
+
 def today():
     """
     Return today date as a datetime object.
@@ -1038,7 +1063,7 @@ def today():
     >>> today()
     2014-06-11
     """
-    return P.datetime.today().date()
+    return pd.datetime.today().date()
 
 
 def last(n=1):
@@ -1131,7 +1156,7 @@ def pop(ser):
 
     """
     global df
-    if isinstance(ser, P.Series):
+    if isinstance(ser, pd.Series):
         df.pop(ser.name)
     else:
         df.pop(ser)
@@ -1161,6 +1186,7 @@ def nanmin(a, **kw):
 
     """
     return np.nanmin(a, **kw)
+
 
 def nanmax(ser, axis=None, out=None, keepdims=None):
     """
@@ -1238,6 +1264,7 @@ def mean(a, axis=None, dtype=None, out=None, keepdims=None):
     keepdims = keepdims if keepdims is not None else np._NoValue
     return np.mean(a, axis, dtype, out, keepdims)
 
+
 def exp(x):
     """
     Calculate the exponential of all elements in the input.
@@ -1313,11 +1340,11 @@ def round(a, decimals=0, out=None, rule=None):
 
 
     """
-    if not isinstance(a, P.Series):
+    if not isinstance(a, pd.Series):
         rule = None
 
     if rule is None:
-        if isinstance(a, P.Series):
+        if isinstance(a, pd.Series):
             return np.round(a.values, decimals, out)
         return np.round(a, decimals, out)
     else:
@@ -1330,6 +1357,7 @@ def round(a, decimals=0, out=None, rule=None):
             lambda x: decimal.Decimal(str(x)).quantize(
                 decimal.Decimal(quant_str),
                 rounding=getattr(decimal, rule.upper())))
+
 
 def floor(x):
     """
@@ -1513,7 +1541,7 @@ def to_timestamp(d):
     Convert a string or numbers into a pandas Timestamp object.
 
     Is unsafe to use not univoque formats as:
-       P.Timestamp('03/04/2015')
+       pd.Timestamp('03/04/2015')
        Timestamp('2015-03-04 00:00:00')  >> wrong value
 
     d can be of the following type, where the notation used is
@@ -1542,7 +1570,8 @@ def to_timestamp(d):
     >>> to_timestamp('2014-09-27')
     Timestamp('2014-09-27 00:00:00')
     """
-    return P.Timestamp(d)
+    return pd.Timestamp(d)
+
 
 # ho aggiunto questa esplicita, invece che avere solo pk nel dizionario
 # sotto
@@ -1585,7 +1614,7 @@ def isnan(x):
 
     >>> isnan(X)
     """
-    return P.isnull(x)
+    return pd.isnull(x)
 
 
 def isinf(x):
@@ -1696,7 +1725,7 @@ def random_db(cols=None, rows=100):
     if cols is None:
         cols = ['A', 'B', 'C']
 
-    return P.DataFrame(
+    return pd.DataFrame(
         data=np.random.rand(rows, len(cols)),
         index=np.arange(rows),
         columns=cols)
@@ -1732,8 +1761,9 @@ def sample(samplesize=1000):
     global df
     if samplesize < len(df):
         idxs = [True] * samplesize + [False] * (len(df) - samplesize)
-        P.np.random.shuffle(idxs)
+        pd.np.random.shuffle(idxs)
         df = df[idxs]
+
 
 def distinct(*cols):
     """
@@ -1743,7 +1773,7 @@ def distinct(*cols):
     if cols:
         col_names = []
         for x in cols:
-            if isinstance(x, P.Series):
+            if isinstance(x, pd.Series):
                 col_names.append(x.name)
             else:
                 col_names.append(x)
@@ -1767,21 +1797,21 @@ def pivot(index=None, columns=None, values=None, **kw):
              Column name to use for populating new frame’s values
 
     """
-    if isinstance(index, P.Series):
+    if isinstance(index, pd.Series):
         index = index.name
-    if isinstance(columns, P.Series):
+    if isinstance(columns, pd.Series):
         columns = columns.name
-    if isinstance(values, P.Series):
+    if isinstance(values, pd.Series):
         values = values.name
 
     global df
-    df = P.pivot_table(
+    df = pd.pivot_table(
         df, index=index, columns=columns, values=values, **kw)
 
 
 def unpivot(keys=None, columns=None, value_name='value', var_name='variable'):
     global df
-    df = P.melt(
+    df = pd.melt(
         df,
         id_vars=keys,
         value_vars=columns,
@@ -1812,7 +1842,7 @@ def set_db(newdf, sanify_labels=False):
     --------
     set_db( db.transpose() )
     """
-    if not isinstance(newdf, P.DataFrame):
+    if not isinstance(newdf, pd.DataFrame):
         raise ValueError("set_db must be used with a valid data-frame")
 
     global df
@@ -1834,8 +1864,8 @@ def stack(level=-1):
     global df
     ret = df.stack(level=level)
 
-    if isinstance(ret, P.Series):
-        ret = P.DataFrame(ret)
+    if isinstance(ret, pd.Series):
+        ret = pd.DataFrame(ret)
 
     df = ret
 
@@ -1954,11 +1984,10 @@ def functions_env():
     functions = {
         # moduli / obj
         "numpy": np,
-        "pandas": P,
+        "pandas": pd,
         "sps": sps,
         "scipy": scipy,
         "statsmodels": statsmodels,
-
 
         # facilities
 
@@ -1996,7 +2025,7 @@ def functions_env():
         "rand": np.random,
 
         # tipi / tipizzatori
-        "isnan": isnan,  # P.isnull,
+        "isnan": isnan,  # pd.isnull,
         "isinf": isinf,  # np.isinf,
         "isnotnan": isnotnan,
         "asstr": asstr,

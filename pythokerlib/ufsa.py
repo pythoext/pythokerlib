@@ -16,7 +16,7 @@ class UFSAException(RuntimeError):
 
 def _get_ufsa(username=config.CURRENT_USER):
     if not USERNAME_VALIDATOR.match(username):
-        raise ValueError("Unacceptable username for UFSA") 
+        raise ValueError("Unacceptable username for UFSA")
     return os.path.abspath(os.path.join(config.STORAGE_ROOT, username, config.MEDIA_SUBDIR))
 
 
