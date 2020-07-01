@@ -5,18 +5,13 @@ pipeline {
   parameters {
     booleanParam(
       name: 'skip_tests',
-      defaultValue: false,
+      defaultValue: true,
       description: 'Skip unit tests'
     )
     booleanParam(
       name: 'deep_tests',
       defaultValue: false,
       description: 'Do deep testing (regression, sonarqube, install, etc..)'
-    )
-    booleanParam(
-      name: 'python3',
-      defaultValue: true,
-      description: 'Building also for Pytho3'
     )
     booleanParam(
       name: 'force_upload',
@@ -34,10 +29,8 @@ pipeline {
     disableConcurrentBuilds()
   }
   environment {
-    PYVER = "2.7"
-    PYVER3 = "3.7"
-    CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY2".replace('%2F','_').replace('/', '_')
-    CONDAENV3 = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY3".replace('%2F','_').replace('/', '_')
+    PYVER = "3.7"
+    CONDAENV = "${env.JOB_NAME}_${env.BUILD_NUMBER}_PY3".replace('%2F','_').replace('/', '_')
   }
   stages {
     stage('Bootstrap') {
@@ -52,33 +45,9 @@ pipeline {
     }
     stage("MultiBuild") {
       parallel {
-        stage("Build on Linux - Legacy Python") {
-          steps {
-            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV)
-          }
-        }
-        stage("Build on Windows - Legacy Python") {
-          steps {
-            script {
-              try {
-                doubleArchictecture('windows', 'base', true, PYVER, CONDAENV)
-              } catch (exc) {
-                echo 'Build failed on Windows Legacy Python'
-                currentBuild.result = 'UNSTABLE'
-              }
-            }
-          }
-        }
         stage("Build on Linux - Python3") {
-          when { expression { return params.python3 } }
           steps {
-            doubleArchictecture('linux', 'base', false, PYVER3, CONDAENV3)
-          }
-        }
-        stage("Build on Windows - Python3") {
-          when { expression { return params.python3 } }
-          steps {
-            doubleArchictecture('windows', 'base', false, PYVER3, CONDAENV3)
+            doubleArchictecture('linux', 'base', false, PYVER, CONDAENV, 'anaconda')
           }
         }
       }
