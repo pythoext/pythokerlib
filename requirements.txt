@@ -1,5 +1,7 @@
 python==2.7.*
 ipykernel
+backports
+backports.functools_lru_cache
 feather-format
 pyarrow==0.16.*
 six
