@@ -132,3 +132,5 @@ linux-*/
 .scannerwork/
 
 # Custom
+.pydevproject
+.project

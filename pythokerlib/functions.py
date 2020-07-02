@@ -1919,6 +1919,11 @@ def lister_ufsa():
     """
     return _get_ufsa_listdir(absname=False)
 
+
+# compatibility con PYTHO DSL
+open_file = opener_ufsa
+list_dir = lister_ufsa
+
 # def get_attachment(attachment_name):
 #     """
 #     get an attachment of the running macro
