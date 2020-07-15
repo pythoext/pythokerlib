@@ -14,7 +14,9 @@ class UFSAException(RuntimeError):
     pass
 
 
-def _get_ufsa(username=config.CURRENT_USER):
+def _get_ufsa(username=None):
+    if username is None:
+        username = config.CURRENT_USER
     if not USERNAME_VALIDATOR.match(username):
         raise ValueError("Unacceptable username for UFSA")
     return os.path.abspath(os.path.join(config.STORAGE_ROOT, username, config.MEDIA_SUBDIR))
@@ -33,7 +35,7 @@ def _validate_filename(filename):
         raise raiseme
 
 
-def ufsa_path(filename='', create_if_not_exists=True, username=config.CURRENT_USER):
+def ufsa_path(filename='', create_if_not_exists=True, username=None):
     up = _get_ufsa(username)
     if create_if_not_exists and not os.path.isdir(up):
         os.makedirs(up, mode=FOLDER_MODE)
@@ -43,15 +45,15 @@ def ufsa_path(filename='', create_if_not_exists=True, username=config.CURRENT_US
     return up
 
 
-def ufsa_listdir(username=config.CURRENT_USER, absname=True):
-    base = ufsa_path(username=username)
+def ufsa_listdir(username=None, absname=True):
+    base = ufsa_path(username)
     for fname in os.listdir(base):
         aname = os.path.join(base, fname)
         if os.path.isfile(aname):
             yield aname if absname else fname
 
 
-def ufsa_opener(filename, mode='r', username=config.CURRENT_USER):
+def ufsa_opener(filename, mode='r', username=None):
     """
     :param filename: logic name in the ufsa path
     :param mode: opener mode, all python modes are supported: r, rb, w, wb, r+, w+, a
