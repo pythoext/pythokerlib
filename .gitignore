@@ -113,7 +113,6 @@ venv.bak/
 
 # Editors: VSCode Idea
 .idea/
-.vscode/
 .vs/
 
 # Vagrant
@@ -132,3 +131,5 @@ linux-*/
 .scannerwork/
 
 # Custom
+.pydevproject
+.project
